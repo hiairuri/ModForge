@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ModForge — Slay the Spire 2 mod editor</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">MF</span>
+    <div>
+      <div class="brand-name">ModForge</div>
+      <div class="brand-sub" id="gameInfo">connecting…</div>
+    </div>
+  </div>
+
+  <!-- 页签：data-i18n 指向文案键，切换界面语言时统一重绘。 -->
+  <nav class="tabs" id="tabs">
+    <button class="tab is-active" data-tab="cards" data-i18n="tabCards">Cards</button>
+    <button class="tab" data-tab="effects" data-i18n="tabEffects">Effects</button>
+    <button class="tab" data-tab="powers" data-i18n="tabPowers">Buffs</button>
+    <button class="tab" data-tab="skins" data-i18n="tabSkins">Skins</button>
+    <button class="tab" data-tab="project" data-i18n="tabProject">Project</button>
+    <button class="tab" data-tab="reference" data-i18n="tabReference">Reference</button>
+    <button class="tab" data-tab="settings" data-i18n="tabSettings">Settings</button>
+  </nav>
+
+  <!--
+    右上角放"每次编辑都要用"的动作：保存 / 另存为 / 导出 mod。
+    新建、打开、在资源管理器中查看都在项目页（开始页）里——它们不是高频操作，
+    放在那里也更像"工程软件的起始界面"。
+  -->
+  <div class="actions">
+    <button class="btn" id="btnSave" data-i18n="btnSave">Save</button>
+    <button class="btn" id="btnSaveAs" data-i18n="btnSaveAs">Save as…</button>
+    <button class="btn btn-primary" id="btnExport" data-i18n="btnExport">Export mod</button>
+  </div>
+</header>
+<main>
+  <!-- CARDS -->
+  <section class="pane is-active" id="pane-cards">
+    <aside class="list-panel">
+      <div class="list-head">
+        <h2 data-i18n="cards">Cards</h2>
+        <button class="btn btn-small" id="btnAddCard" data-i18n="new">+ New</button>
+      </div>
+      <ul class="list" id="cardList"></ul>
+    </aside>
+
+    <div class="editor" id="cardEditor">
+      <div class="empty" data-i18n="selectCard"></div>
+    </div>
+  </section>
+
+  <!-- EFFECTS -->
+  <section class="pane" id="pane-effects">
+    <aside class="list-panel">
+      <div class="list-head">
+        <h2 data-i18n="effects">Shared effects</h2>
+        <button class="btn btn-small" id="btnAddShared" data-i18n="new">+ New</button>
+      </div>
+      <ul class="list" id="sharedList"></ul>
+    </aside>
+
+    <div class="editor" id="sharedEditor">
+      <div class="empty" data-i18n="selectEffect"></div>
+    </div>
+  </section>
+
+  <!-- POWERS -->
+  <section class="pane" id="pane-powers">
+    <aside class="list-panel">
+      <div class="list-head">
+        <h2 data-i18n="powers">Buffs &amp; debuffs</h2>
+        <button class="btn btn-small" id="btnAddPower" data-i18n="new">+ New</button>
+      </div>
+      <ul class="list" id="powerList"></ul>
+    </aside>
+
+    <div class="editor" id="powerEditor">
+      <div class="empty" data-i18n="selectPower"></div>
+    </div>
+  </section>
+
+  <!-- SKINS -->
+  <section class="pane" id="pane-skins">
+    <aside class="list-panel">
+      <div class="list-head">
+        <h2 data-i18n="installedSkins">Installed skins</h2>
+        <button class="btn btn-small" id="btnRefreshSkins" data-i18n="refresh">Refresh</button>
+      </div>
+      <ul class="list" id="skinList"></ul>
+    </aside>
+
+    <div class="editor" id="skinEditor">
+      <div class="empty" data-i18n="selectSkin"></div>
+    </div>
+  </section>
+
+  <!-- PROJECT（开始页） -->
+  <section class="pane" id="pane-project">
+    <div class="centered">
+      <h2 data-i18n="tabProject">Project</h2>
+
+      <!-- 开始页的大按钮：新建 / 打开 / 在资源管理器中查看。 -->
+      <div class="start-actions">
+        <button class="start-card" id="btnNewProject">
+          <span class="start-icon">＋</span>
+          <span class="start-title" data-i18n="startNew">New project</span>
+          <span class="start-sub" data-i18n="startNewSub"></span>
+        </button>
+        <button class="start-card" id="btnOpenProject">
+          <span class="start-icon">▤</span>
+          <span class="start-title" data-i18n="startOpen">Open project</span>
+          <span class="start-sub" data-i18n="startOpenSub"></span>
+        </button>
+        <button class="start-card" id="btnRevealProject">
+          <span class="start-icon">▸</span>
+          <span class="start-title" data-i18n="startReveal">Show in File Explorer</span>
+          <span class="start-sub" data-i18n="startRevealSub"></span>
+        </button>
+      </div>
+
+      <!--
+        项目自身的元信息，接着是项目文件夹。
+        没有小标题：这两组内容就在"项目"这一个标题下，再加一层标题反而碎。
+      -->
+      <div class="section">
+        <div class="grid" id="projectForm"></div>
+        <div class="grid" id="projectFileForm"></div>
+        <p class="hint" id="projectFileStatus"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFERENCE -->
+  <section class="pane" id="pane-reference">
+    <aside class="list-panel">
+      <div class="list-head">
+        <h2 data-i18n="vanillaContent">Vanilla content</h2>
+      </div>
+      <input type="text" class="search" id="refSearch" data-i18n-ph="searchPlaceholder" placeholder="Search by name or id…">
+      <div class="ref-filter" id="refFilter">
+        <button class="chip is-active" data-cat="cards" data-i18n="cards">Cards</button>
+        <button class="chip" data-cat="powers" data-i18n="powers">Powers</button>
+        <button class="chip" data-cat="relics" data-i18n="relics">Relics</button>
+      </div>
+      <ul class="list list-dense" id="refList"></ul>
+    </aside>
+    <div class="editor">
+      <h2 data-i18n="reference">Reference</h2>
+      <div id="refDetail" class="empty" data-i18n="pickEntry"></div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="pane" id="pane-settings">
+    <div class="centered">
+      <h2 data-i18n="settings">Settings</h2>
+
+      <!-- 语言：界面语言与内容语言。属于配置，所以放这里而不是顶栏。 -->
+      <div class="section">
+        <div class="section-head"><h3 data-i18n="settingsLanguage">Language</h3></div>
+        <div class="grid">
+          <div class="field">
+            <label for="uiLang" data-i18n="uiLanguage">Interface</label>
+            <select id="uiLang">
+              <option value="zh">中文</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="contentLang" data-i18n="contentLanguage">Text language</label>
+            <select id="contentLang"></select>
+          </div>
+        </div>
+      </div>
+
+      <!--
+        程序默认路径：与"具体是哪份项目"无关的那些出入口。改完点保存。
+        项目自己该放哪儿由"新建项目的父目录"决定；项目内部的目录布局是固定的，
+        不在这里配置（见项目页的说明）。
+      -->
+      <div class="section">
+        <div class="section-head"><h3 data-i18n="settingsPaths">Default paths</h3></div>
+        <div class="grid" id="settingsForm"></div>
+        <div class="row-actions">
+          <button class="btn btn-primary" id="btnSaveSettings" data-i18n="btnSaveSettings">Save settings</button>
+          <span class="hint" id="settingsStatus"></span>
+        </div>
+      </div>
+
+      <!-- 句式模块：独立于程序的一个文件夹，加语言只要往里丢文件。 -->
+      <div class="section">
+        <div class="section-head"><h3 data-i18n="sentencesTitle">Sentences</h3></div>
+        <div id="sentencesForm"></div>
+      </div>
+
+      <!-- 日志：校验结果与生成过程的输出。诊断用，所以也放设置页。 -->
+      <div class="section">
+        <div class="section-head">
+          <h3 data-i18n="output">Output</h3>
+          <button class="btn btn-small" id="btnValidate" data-i18n="btnValidate">Validate</button>
+        </div>
+        <div class="issues" id="issues"></div>
+        <pre class="console" id="console"></pre>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<!-- 界面文案在 language/ 下，与描述句式文件同一处：程序里按语言存放的文本都在那里。 -->
+<script src="../language/ui.js"></script>
+<!-- 复用组件（多值输入等）在 components.js，页面逻辑在 app.js。 -->
+<script src="components.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

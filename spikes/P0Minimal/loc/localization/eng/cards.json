@@ -1,0 +1,6 @@
+{
+  "FORGE_STRIKE.title": "Forge Strike",
+  "FORGE_STRIKE.description": "Deal {Damage:diff()} damage.\nGain {ForgeMightPower:diff()} Forge Might.",
+  "FORGE_WARD.title": "Forge Ward",
+  "FORGE_WARD.description": "Gain {Block:diff()} [gold]Block[/gold].\nGain {ForgeMightPower:diff()} Forge Might."
+}

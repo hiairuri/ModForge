@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>ModForge.Core</RootNamespace>
+    <AssemblyName>ModForge.Core</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.MetadataLoadContext" Version="10.0.12" />
+    <!--
+      卡牌的数值（费用、伤害、升级增量）只存在于游戏的编译产物 sts2.dll 里，本地化表只有
+      "{Damage:diff()}" 这样的占位符。所以要读 IL 才能拿到真实数值。
+    -->
+    <PackageReference Include="System.Reflection.Metadata" Version="10.0.12" />
+    <!-- Pin Roslyn to the version shipped with the .NET 9 SDK so compilation works offline. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Sources under Generate/Runtime are emitted into generated mods. They reference
+      game types, so they must not be compiled into this project; they ship as
+      embedded resources instead.
+    -->
+    <Compile Remove="Generate\Runtime\**\*.cs" />
+    <EmbeddedResource Include="Generate\Runtime\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Sentence templates, one file per language. The same files live in the repository's
+      language/sentences/ folder and are read from disk at runtime, so adding a language is
+      just dropping a file in. The copies here are only a fallback for when that folder is
+      missing (e.g. running the built binary somewhere else).
+    -->
+    <EmbeddedResource Include="..\..\language\sentences\*.json" LogicalName="sentences.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

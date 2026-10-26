@@ -1,0 +1,130 @@
+{
+  "id": "ArtDemo",
+  "name": "\u5361\u9762\u6F14\u793A",
+  "author": "ModForge",
+  "description": "",
+  "version": "1.0.0",
+  "minGameVersion": "0.107.1",
+  "affectsGameplay": true,
+  "cards": [
+    {
+      "id": "NEW_CARD",
+      "name": {
+        "zhs": "\u6DF1\u6E0A\u51DD\u89C6"
+      },
+      "description": {
+        "eng": "Discard cards equal to cards in hand from the hand.\nGain Doom equal to cards in hand.",
+        "zhs": "\u83B7\u5F97 \u7B49\u4E8E \u624B\u724C\u6570 \u7684[gold]\u683C\u6321[/gold]\u3002\n\u83B7\u5F97 \u7B49\u4E8E \u624B\u724C\u6570 \u7684\u529B\u91CF\u3002\n\u4E22\u5F03\u624B\u724C\u4E2D\u7684 \u7B49\u4E8E \u624B\u724C\u6570 \u5F20\u724C\u3002"
+      },
+      "pool": "necrobinder",
+      "type": "Attack",
+      "rarity": "Basic",
+      "target": "AnyEnemy",
+      "energyCost": 3,
+      "starCost": -1,
+      "energyCostX": false,
+      "starCostX": false,
+      "replayCount": 0,
+      "keywords": [],
+      "upgradeCostDelta": -1,
+      "effects": [
+        {
+          "sharedEffectId": null,
+          "kind": "RemovePower",
+          "trigger": "OnPlay",
+          "target": "Target",
+          "amount": 5,
+          "amountMode": "Fixed",
+          "source": {
+            "actor": "Self",
+            "kind": "None",
+            "perUnit": 1,
+            "isUsed": false
+          },
+          "powerId": "POWER.ARTIFACT_POWER",
+          "pile": "Hand",
+          "placement": "Top",
+          "count": 1,
+          "cardId": null,
+          "upgraded": false,
+          "repeat": 1,
+          "orb": "Lightning",
+          "enchantmentId": null,
+          "permanent": false,
+          "cardFilter": "Any",
+          "upgrade": {
+            "amountDelta": 0,
+            "perUnitDelta": 0,
+            "repeatDelta": 0
+          }
+        },
+        {
+          "sharedEffectId": null,
+          "kind": "ApplyPower",
+          "trigger": "OnPlay",
+          "target": "Target",
+          "amount": 6,
+          "amountMode": "Calculated",
+          "source": {
+            "actor": "Self",
+            "kind": "MissingHp",
+            "perUnit": 1,
+            "isUsed": true
+          },
+          "powerId": "POWER.DOOM_POWER",
+          "pile": "Hand",
+          "placement": "Top",
+          "count": 1,
+          "cardId": null,
+          "upgraded": false,
+          "repeat": 3,
+          "orb": "Lightning",
+          "enchantmentId": null,
+          "permanent": false,
+          "cardFilter": "Any",
+          "upgrade": {
+            "amountDelta": 12,
+            "perUnitDelta": 0,
+            "repeatDelta": 0
+          }
+        },
+        {
+          "sharedEffectId": null,
+          "kind": "DealDamage",
+          "trigger": "OnPlay",
+          "target": "AllEnemies",
+          "amount": 0,
+          "amountMode": "Calculated",
+          "source": {
+            "actor": "Self",
+            "kind": "Doom",
+            "perUnit": 1,
+            "isUsed": true
+          },
+          "powerId": null,
+          "pile": "Hand",
+          "placement": "Top",
+          "count": 1,
+          "cardId": null,
+          "upgraded": false,
+          "repeat": 1,
+          "orb": "Lightning",
+          "enchantmentId": null,
+          "permanent": false,
+          "cardFilter": "Any",
+          "upgrade": {
+            "amountDelta": 0,
+            "perUnitDelta": 0,
+            "repeatDelta": 0
+          }
+        }
+      ],
+      "artFile": "colorless_calamity.webp"
+    }
+  ],
+  "powers": [],
+  "sharedEffects": [],
+  "skins": [],
+  "typePrefix": "",
+  "selfCheckOnStartup": false
+}

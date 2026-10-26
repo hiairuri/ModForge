@@ -1,0 +1,25 @@
+# ---- 构建产物 ----
+bin/
+obj/
+build/
+out/
+
+# ---- 反编译的游戏源码：仅本机查阅用，不发布 ----
+decompiled/
+
+# ---- 用户的 mod 工程：用户数据，不进仓库 ----
+projects/
+
+# ---- 本地卡图缓存：游戏美术资源，不发布（保留说明文件） ----
+cardart/*
+!cardart/README.txt
+
+# ---- 本机设置（含本机路径） ----
+settings.json
+
+# ---- IDE / 临时文件 ----
+.vs/
+.idea/
+*.user
+*.suo
+*.tmp

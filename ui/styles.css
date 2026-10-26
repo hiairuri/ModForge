@@ -1,0 +1,1288 @@
+:root {
+  --bg: #14161c;
+  --panel: #1b1e26;
+  --panel-2: #22262f;
+  --line: #2e333f;
+  --line-soft: #262b35;
+  --text: #e6e8ee;
+  --text-dim: #9aa1b1;
+  --text-faint: #6d7488;
+  --accent: #e0662a;
+  --accent-soft: #f08a4b;
+  --blue: #5b9dd9;
+  --green: #4fb477;
+  --red: #d9534f;
+  --amber: #d6a13d;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+
+/*
+ * 滚动条：细、灰、不抢眼。
+ *
+ * 默认滚动条在深色底上会显出一条浅灰色的宽槽，旁边就是暗色面板时很突兀。
+ * 这里统一成"细条 + 半透明灰"，与整体配色一致；两套写法都要给——scrollbar-width /
+ * scrollbar-color 是标准属性，::-webkit-scrollbar 是 Chromium/Safari 的实现。
+ * 悬停时才稍微变亮，让它可以被找到但不常驻目光。
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3a4150 transparent;
+}
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+::-webkit-scrollbar-thumb {
+  background: #3a4150;
+  border-radius: 99px;
+  /* 用与背景同色的边框把滑块"缩"一点，比直接改宽度更稳。
+     （CSS 注释不能嵌套，所以这里不用块注释。） */
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover { background: #4a5364; background-clip: content-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 "Segoe UI", system-ui, -apple-system, "Microsoft YaHei", sans-serif;
+}
+
+body { display: flex; flex-direction: column; }
+
+/* ---------- top bar ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; min-width: 210px; }
+
+.brand-mark {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: var(--radius);
+  background: linear-gradient(140deg, var(--accent), #8c3b16);
+  font-weight: 700; letter-spacing: .5px;
+}
+
+.brand-name { font-weight: 650; letter-spacing: .3px; }
+.brand-sub { font-size: 11.5px; color: var(--text-faint); }
+
+.tabs { display: flex; gap: 4px; flex: 1; }
+
+.tab {
+  background: none; border: 0; color: var(--text-dim);
+  padding: 7px 13px; border-radius: 6px; cursor: pointer;
+  font-size: 13.5px; font-family: inherit;
+}
+.tab:hover { background: var(--panel-2); color: var(--text); }
+.tab.is-active { background: var(--panel-2); color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+
+.actions { display: flex; gap: 8px; }
+
+.btn {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+.btn:hover { border-color: #3c4353; background: #272c37; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn-primary:hover { background: var(--accent-soft); border-color: var(--accent-soft); }
+.btn-small { padding: 4px 10px; font-size: 12.5px; }
+.btn-ghost { background: none; }
+.btn-danger { color: #e88; }
+.btn-danger:hover { border-color: var(--red); }
+.btn:disabled { opacity: .5; cursor: default; }
+
+/* ---------- panes ---------- */
+
+main { flex: 1; min-height: 0; display: flex; }
+
+.pane { display: none; flex: 1; min-height: 0; }
+.pane.is-active { display: flex; overflow: hidden; }
+
+/*
+ * 两列各自滚动：左边列表、右边编辑区。两者是"兄弟"关系，不是嵌套——这是关键。
+ *
+ * 嵌套滚动（一个可滚动元素套在另一个可滚动的面板里）才是滚轮出问题的根源：滚轮先被内层
+ * 吃掉，内层到头才轮到外层，中途还会锁存方向，于是"滚了几乎不动"或"卡住后要反向滚一次、
+ * 画面却朝原方向走"。兄弟滚动没有这个问题，滚轮落在哪一列就滚哪一列。
+ *
+ * 两列都必须有确定的高度（面板高度），否则元素会按内容撑高，列表条目一多就超出视口、
+ * 后半截既看不到也点不到。
+ */
+.list-panel {
+  width: 290px; flex: 0 0 auto;
+  display: flex; flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.list-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px 8px;
+  flex: 0 0 auto;
+}
+.list-head h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--text-dim); margin: 0; }
+
+/*
+ * 列表自己滚（高度受限于侧栏），条目再多也全部可达。
+ *
+ * overflow-anchor: none — 关掉滚动锚定。列表会因为新增/删除卡牌而整体重建，浏览器的
+ * 锚定逻辑会为了"保持可见内容不动"反过来调整 scrollTop，表现就是滚了却几乎不动。
+ */
+.list {
+  list-style: none; margin: 0; padding: 0 8px 8px;
+  flex: 1 1 auto; min-height: 0;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+
+.list li {
+  padding: 9px 11px; border-radius: 6px; cursor: pointer;
+  border: 1px solid transparent;
+}
+.list li:hover { background: var(--panel-2); }
+.list li.is-active { background: var(--panel-2); border-color: var(--accent); }
+.list .li-id { font-size: 11px; color: var(--text-faint); font-family: ui-monospace, Consolas, monospace; }
+.list-dense li { padding: 6px 10px; }
+
+.hint { font-size: 12px; color: var(--text-faint); padding: 0 14px 14px; margin: 0; }
+
+/*
+ * 效果行里的说明小字（"一张牌的所有基础值的升级增长量必须相等"）。
+ *
+ * 基础 .hint 的左右内边距是给面板级提示用的（贴着面板边缘），放进效果行里会与那排
+ * 字段的缩进对不齐；这里去掉内边距，只用一条左边线把它标成"附注"。
+ */
+.hint.note {
+  padding: 0;
+  margin: 2px 0 0;
+  border-left: 2px solid var(--line);
+  padding-left: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/*
+ * 红色小字：那一格**填了但此刻用不了**（"此牌无可选目标"）。
+ *
+ * 与 .hint.note 同一形状（左边一条竖线 + 小字），只把竖线与字色换成红色——
+ * 它不是"附注"而是"这里现在不对"，所以要用警示色把它从一片说明里挑出来。
+ */
+.hint.warn {
+  padding: 0;
+  margin: 2px 0 0;
+  border-left: 2px solid var(--red);
+  padding-left: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--red);
+}
+
+/*
+ * 编辑区自己滚（与侧栏是兄弟关系，见 .list-panel 的说明）。
+ *
+ * overflow-anchor: none — 关掉滚动锚定。这里的内容会被整块替换（卡面、占位符标签、
+ * 描述预览都会在输入后异步刷新），高度随时在变；锚定会为了"保持可见内容不动"反过来
+ * 调整 scrollTop，表现就是滚了却几乎不动、甚至往回走。
+ */
+.editor {
+  flex: 1 1 auto; min-width: 0;
+  padding: 20px 24px;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+.editor.wide { max-width: 900px; }
+.editor h2 { margin: 0 0 4px; font-size: 17px; }
+.empty { color: var(--text-faint); padding: 40px 0; text-align: center; }
+
+/*
+ * 设置页与项目页（开始页）的版心：内容居中、限制宽度。
+ *
+ * 这两页是表单/入口，不是数据表格，铺满整个宽屏反而难读——一行太长、眼睛要来回扫。
+ * 给了 max-width 再让内容居中，读起来像一张纸；在大屏上也会被"放大一些"（见下面的
+ * font-size 与控件尺寸），不会缩在角落。
+ */
+.centered {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 auto;
+  max-width: 860px;
+  width: 100%;
+  padding: 34px 40px 60px;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+
+/* 开始页的大按钮：一张卡片一个动作。 */
+.start-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin: 20px 0 8px;
+}
+
+.start-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 18px 20px;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .12s, background .12s, transform .12s;
+}
+
+.start-card:hover { border-color: var(--accent); background: var(--panel-2); transform: translateY(-1px); }
+
+.start-icon { font-size: 20px; line-height: 1; color: var(--accent); }
+.start-title { font-size: 15px; font-weight: 600; }
+.start-sub { font-size: 12.5px; color: var(--text-dim); line-height: 1.45; }
+
+/* 设置页/项目页里的表单放大一点：这两页是"一次看完整"的，不缺横向空间。 */
+.centered .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.centered input[type=text], .centered select { padding: 9px 11px; font-size: 14.5px; }
+.centered label { font-size: 13px; }
+.centered .section { margin-top: 30px; }
+
+/* 确认/输入对话框（<dialog>）。 */
+dialog.confirm {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 22px 24px;
+  max-width: 460px;
+  font: inherit;
+}
+
+dialog.confirm::backdrop { background: rgba(0, 0, 0, .55); }
+dialog.confirm h3 { margin: 0 0 10px; font-size: 16px; }
+dialog.confirm p { margin: 0 0 14px; color: var(--text-dim); line-height: 1.55; font-size: 13.5px; }
+dialog.confirm input[type=text] { margin-bottom: 16px; }
+dialog.confirm .row-actions { justify-content: flex-end; }
+
+/* ---------- forms ---------- */
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 16px; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field.span-2 { grid-column: span 2; }
+.field.span-all { grid-column: 1 / -1; }
+
+/*
+ * 字段标题行：标签在左，"这个字段属于哪种内容语言"之类的选择器在右。
+ * 用 flex 而不是把选择器塞进 <label>：后者会让点选择器也聚焦到输入框。
+ */
+.field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* 输入框右上角的内联语言选择器。 */
+select.lang-inline {
+  width: auto;
+  max-width: 11rem;
+  padding: 2px 6px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  background: var(--panel);
+}
+
+/* 路径输入行：文本框 + "浏览…"按钮并排，按钮不跟着拉伸。 */
+.path-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.path-row input { flex: 1 1 auto; min-width: 0; }
+.path-row .btn { flex: 0 0 auto; }
+
+label { font-size: 12px; color: var(--text-dim); }
+
+input[type=text], input[type=number], select, textarea {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 7px 9px;
+  font: inherit;
+  font-size: 13.5px;
+  width: 100%;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+textarea { resize: vertical; min-height: 62px; font-family: inherit; }
+input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; }
+
+.check { flex-direction: row; align-items: center; gap: 8px; }
+.check label { color: var(--text); font-size: 13.5px; }
+
+/*
+ * 卡牌 / 状态 id 的可输入下拉（input + datalist）。
+ *
+ * 输入框的样式沿用它上面的 input[type=text]，这里只管下面那行说明：
+ * 它显示这个 id 现在指向什么，打错时立刻能看出来。平时是暗色小字，不抢注意力。
+ */
+.combo { display: flex; flex-direction: column; gap: 3px; }
+.combo-hint { font-size: 11.5px; color: var(--text-dim); min-height: 14px; line-height: 1.2; }
+.combo-hint:empty { min-height: 0; }
+
+/*
+ * 多值输入（ui/components.js 的 multiCombo）。
+ *
+ * 与上面 .combo 同族，区别是**下拉由它自己画**：多个值用逗号分隔时，浏览器只会拿整段去比对
+ * datalist，打到第二个值就匹配不上了——要按"光标前那一段"筛，只能自己做。
+ *
+ * 菜单绝对定位，不把下面的格子推开（否则一弹菜单整行都在跳）。
+ */
+.multicombo { position: relative; display: flex; flex-direction: column; gap: 3px; }
+
+.multicombo-menu {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+  max-height: 168px; overflow-y: auto;
+  margin-top: 2px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
+}
+
+.multicombo-option {
+  display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+  width: 100%; padding: 5px 9px;
+  background: none; border: 0; cursor: pointer;
+  color: inherit; font: inherit; font-size: 12.5px; text-align: left;
+}
+
+.multicombo-option em {
+  font-style: normal; font-size: 11px; color: var(--text-dim);
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.multicombo-option:hover, .multicombo-option.is-active { background: var(--line-soft); }
+
+/* 字段内部的小勾选项（如"费用是 X"），比 .check 更紧凑。 */
+.check-inline {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-dim); cursor: pointer;
+}
+.check-inline input { accent-color: var(--accent); width: 14px; height: 14px; }
+
+/*
+ * 搜索框。
+ *
+ * 外观不在这里写：它走上面 input[type=text] 那套（背景、边框、圆角、字号都与普通文本框
+ * 一致），这里只管它在侧栏里占多宽。
+ *
+ * 选择器必须写到 .list-panel 这一层。原因：基础规则是 input[type=text]（特异性 0,1,1），
+ * 而单独的 .search 只有 0,1,0——被压住的是整条 width，于是 width:100% 生效、再叠上左右
+ * 12px 外边距，搜索框就会溢出侧栏（实测右边多出 11px，侧栏还因此出现了横向滚动）。
+ * max-width 能压住 width:100%，所以这里只给上限，不再去改 width。
+ */
+.list-panel .search {
+  margin: 0 12px 8px;
+  max-width: 265px;
+}
+
+.ref-filter { display: flex; gap: 5px; padding: 0 12px 10px; }
+.chip {
+  background: var(--panel-2); border: 1px solid var(--line); color: var(--text-dim);
+  border-radius: 99px; padding: 3px 11px; font-size: 12px; cursor: pointer; font-family: inherit;
+}
+.chip.is-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ---------- section blocks ---------- */
+
+.section { margin-top: 26px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.section-head h3 { margin: 0; font-size: 14px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .7px; }
+
+.card-row {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--panel);
+}
+.card-row .row-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.card-row .row-title { font-weight: 600; font-size: 13.5px; }
+/* "启用条件"紧跟在效果名字右边：勾选框与文字一组的行内样式，左侧留一点间距。 */
+.card-row .cond-head-toggle { display: inline-flex; align-items: center; gap: 5px; margin-left: 12px; font-size: 12.5px; color: var(--text-faint); cursor: pointer; }
+.card-row .cond-head-toggle input { margin: 0; }
+.row-actions { display: flex; gap: 6px; }
+
+.effects-summary { font-size: 12px; color: var(--text-faint); margin-top: 4px; }
+
+/* ---------- preview ---------- */
+
+.preview {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 14px;
+  margin-top: 18px;
+}
+.preview h3 { margin: 0 0 8px; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .7px; }
+.preview .pv-name { font-weight: 650; font-size: 15px; }
+.preview .pv-cost { color: var(--amber); font-family: ui-monospace, monospace; }
+.preview .pv-body { margin-top: 8px; white-space: pre-wrap; color: #cdd2de; }
+.preview .pv-meta { margin-top: 10px; font-size: 11.5px; color: var(--text-faint); font-family: ui-monospace, monospace; }
+
+/* ---------- issues / console ---------- */
+
+.issues { margin: 16px 0; display: flex; flex-direction: column; gap: 6px; }
+
+.issue {
+  display: flex; gap: 10px; align-items: flex-start;
+  border-radius: 6px; padding: 9px 12px; font-size: 13px;
+  border: 1px solid var(--line-soft); background: var(--panel);
+}
+.issue .tag { font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; padding-top: 2px; min-width: 52px; font-weight: 600; }
+.issue.error { border-color: #5c2b29; } .issue.error .tag { color: var(--red); }
+.issue.warn { border-color: #574526; } .issue.warn .tag { color: var(--amber); }
+.issue.ok { border-color: #274b36; } .issue.ok .tag { color: var(--green); }
+
+/* 控制台不自己滚动：日志变长时它撑高，由所在的编辑区滚动。
+   这里再开一个可滚动区，编辑区内部就成了嵌套滚动（见 .list-panel 的说明）。 */
+.console {
+  background: #0e1015;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  font: 12px/1.6 ui-monospace, Consolas, "Cascadia Mono", monospace;
+  color: #b9c0cf;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* ---------- toast ---------- */
+
+.toast {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--panel-2); border: 1px solid var(--line);
+  padding: 10px 18px; border-radius: 8px; opacity: 0; pointer-events: none;
+  transition: opacity .18s, transform .18s; font-size: 13.5px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.err { border-color: var(--red); }
+.toast.ok { border-color: var(--green); }
+
+/* ---------- 卡面选择 ---------- */
+
+.art-picker { display: flex; gap: 6px; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .62);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+}
+
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  width: min(920px, 92vw);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, .55);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.modal-head h3 { margin: 0; font-size: 15px; }
+
+.art-tabs { display: flex; gap: 6px; padding: 12px 16px 0; }
+
+.art-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px 6px;
+  align-items: center;
+}
+.art-toolbar .search { margin: 0; flex: 1; }
+
+.art-modal .hint { padding: 0 16px; }
+
+.art-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+  padding: 12px 16px 16px;
+  overflow-y: auto;
+  min-height: 160px;
+}
+
+.art-cell {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-family: inherit;
+  color: var(--text);
+  text-align: left;
+}
+.art-cell:hover { border-color: var(--accent); }
+.art-cell img {
+  width: 100%;
+  aspect-ratio: 1000 / 760;
+  object-fit: cover;
+  border-radius: 5px;
+  background: var(--bg);
+}
+.art-cell-name { font-size: 11.5px; line-height: 1.3; }
+.art-cell-group { font-size: 10px; color: var(--text-faint); }
+
+/*
+ * 数值组与重复次数组之间的分隔线。
+ *
+ * 两组字段都平铺在同一个 grid 里，没有它的话"重复次数"看起来像是数值区的一部分
+ * （数值来源、每单位、次数来源、次数基础值连成一片）。这条线只占一行高度，不参与布局。
+ */
+.section-break {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--line-soft);
+  margin: 2px 0 0;
+}
+
+/* ---------- 升级等级表（多次升级） ---------- */
+
+.level-table {
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 8px 12px;
+}
+
+.level-table > summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-dim);
+  user-select: none;
+}
+
+.level-table > summary:hover { color: var(--accent); }
+
+.level-row {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.level-head {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-bottom: 4px;
+}
+
+/* ---------- 描述实时预览 ---------- */
+
+.desc-preview {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.desc-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.desc-preview-body {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #cdd2de;
+  white-space: pre-wrap;
+  min-height: 38px;
+}
+
+/* ---------- 语言选择与提示 ---------- */
+
+.lang-pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.lang-pick select {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 12.5px;
+  width: auto;
+}
+
+/* 当前正在编辑的内容语言，以及该语言是否已翻译。 */
+.lang-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.lang-badge {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 2px 8px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.lang-warn { color: var(--amber); }
+.lang-ok { color: var(--green); }
+
+/* ---------- card layout: preview beside the basic fields ---------- */
+
+/*
+ * 左：卡面预览；右：基础信息 + 描述 + 效果。整个表单都在右列里，预览才能一路粘住——
+ * 粘性定位的活动范围限于它的包含块，右列只有基础信息那么高时，往下滚一点预览就会
+ * 被"用完"而跟着滚走。
+ *
+ * 网格项纵向拉伸（align-items 用默认的 stretch），于是预览列的盒子有整行那么高，
+ * 里面的 pv-sticky 就能在整行范围内一直贴在顶部；列表很长让整行变高时同样成立。
+ * 注意不要再加 align-items: start——那会让预览列退回内容高度，粘性随之失效。
+ */
+.card-layout {
+  display: grid;
+  grid-template-columns: 320px minmax(320px, 1fr);
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.card-layout-preview { min-width: 0; }
+
+.card-layout-preview > .pv-sticky {
+  position: sticky;
+  top: 0;
+}
+
+.card-layout-fields { min-width: 0; }
+
+@media (max-width: 1080px) {
+  .card-layout { grid-template-columns: 1fr; }
+  .card-layout-preview > .pv-sticky { position: static; }
+}
+
+/* ---------- keyword chips ---------- */
+
+.kw-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.kw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 4px 11px 4px 8px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+.kw-chip:hover { border-color: #3c4353; color: var(--text); }
+.kw-chip:has(input:checked) { border-color: var(--accent); color: var(--text); background: rgba(224, 102, 42, .12); }
+.kw-chip input { accent-color: var(--accent); }
+
+/* ---------- description tokens ---------- */
+
+.token-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.token-label { font-size: 12px; color: var(--text-faint); }
+
+.token {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  cursor: pointer;
+}
+.token:hover { border-color: var(--accent); }
+.token em { font-style: normal; font-family: "Segoe UI", system-ui, sans-serif; font-size: 11px; color: var(--text-faint); }
+
+.token-empty { font-size: 12px; color: var(--text-faint); }
+
+/* 占位符容器：里面的按钮由 fillDescriptionTokens 整体替换，容器本身不动。
+   它必须参与 token-hint 的换行布局，否则一排按钮会溢出。 */
+.token-list {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- shared effect references ---------- */
+
+.card-row.is-ref { border-left: 3px solid var(--blue); }
+
+.ref-badge {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  background: rgba(91, 157, 217, .18);
+  color: var(--blue);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+
+.ref-summary {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* ---------- card face preview ---------- */
+
+/*
+ * 卡面预览：与游戏卡牌场景 1:1 对应。
+ *
+ * 游戏的设计尺寸是 300x422（scenes/cards/card.tscn，原点在卡片中心）。这里保持同样的
+ * 长宽比，并用 --u 表示"1 个游戏像素"，于是所有尺寸都能直接写游戏里的原始数字，
+ * 一眼就能核对，也不会再出现字号整体偏小的问题：
+ *
+ *   --u         1 个游戏像素
+ *   名字        字形 26px，位置 (150-105)/300 .. (150+105)/300
+ *   描述        字形 21px（游戏会自动缩到 12px 以容纳长文本）
+ *   类型        字形 16px，下面有底片
+ *   能量数字    字形 32px，叠在能量珠上
+ *
+ * 卡片按可用高度缩放，所以矮窗口里整套元素一起变小，比例不会走样。
+ */
+.cardface {
+  --card-w: min(299px, calc((100vh - 12rem) * 300 / 422));
+  --u: calc(var(--card-w) / 300);
+  position: relative;
+  width: var(--card-w);
+  aspect-ratio: 300 / 422;
+  margin: 4px auto 10px;
+  flex: 0 0 auto;
+}
+
+/* ---- 立绘（游戏的 Portrait：10.19%..55.21%，横向 8.33%..91.67%）---- */
+.cardface .cf-art {
+  position: absolute;
+  left: 8.33%;
+  top: 10.19%;
+  width: 83.33%;
+  height: 45.02%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(160deg, #232833, #171b23);
+}
+
+/* 立绘要缩放到窗口里：原图远大于此，不缩放只会露出左上角一块。 */
+.cardface .cf-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardface .cf-art span {
+  font-size: calc(11 * var(--u));
+  color: var(--text-faint);
+  padding: 0 calc(10 * var(--u));
+  text-align: center;
+  word-break: break-all;
+}
+
+/*
+ * 立绘内框（游戏的 PortraitBorder：11.14%..60.9%，横向 4.17%..95.83%）。
+ *
+ * 少了它，立绘就是"直接贴在卡框里"，没有游戏里那圈内边；而叠放顺序也要对——
+ * 内框在立绘之上、外框之下（游戏里 PortraitBorder 就是画在 Frame 之前的那一层），
+ * 压到立绘下面就会被外框盖住，看起来"过细"。
+ *
+ * 它的材质和绸带是同一个（游戏里 `_portraitBorder.Material = Model.BannerMaterial`），
+ * 所以颜色同样随稀有度变。
+ */
+.cardface .cf-inner {
+  position: absolute;
+  left: 4.17%;
+  top: 11.14%;
+  width: 91.67%;
+  height: 49.76%;
+  z-index: 6;
+  pointer-events: none;
+}
+
+/* 内框与绸带共用同一套稀有度材质，颜色自然也一致。 */
+.cardface[data-rarity="Basic"] .cf-inner,
+.cardface[data-rarity="Basic"] .cf-type img,
+.cardface[data-rarity="Basic"] .cf-banner img { filter: hue-rotate(0deg) saturate(0) brightness(0.85); }
+.cardface[data-rarity="Common"] .cf-inner,
+.cardface[data-rarity="Common"] .cf-type img,
+.cardface[data-rarity="Common"] .cf-banner img { filter: hue-rotate(0deg) saturate(0) brightness(0.85); }
+.cardface[data-rarity="Uncommon"] .cf-inner,
+.cardface[data-rarity="Uncommon"] .cf-type img,
+.cardface[data-rarity="Uncommon"] .cf-banner img { filter: none; }
+.cardface[data-rarity="Rare"] .cf-inner,
+.cardface[data-rarity="Rare"] .cf-type img,
+.cardface[data-rarity="Rare"] .cf-banner img { filter: hue-rotate(203deg) saturate(1.198) brightness(1.14); }
+.cardface[data-rarity="Event"] .cf-inner,
+.cardface[data-rarity="Event"] .cf-type img,
+.cardface[data-rarity="Event"] .cf-banner img { filter: hue-rotate(315deg) saturate(0.85) brightness(0.9); }
+.cardface[data-rarity="Token"] .cf-inner,
+.cardface[data-rarity="Token"] .cf-type img,
+.cardface[data-rarity="Token"] .cf-banner img { filter: hue-rotate(0deg) saturate(0) brightness(0.85); }
+.cardface[data-rarity="Status"] .cf-inner,
+.cardface[data-rarity="Status"] .cf-type img,
+.cardface[data-rarity="Status"] .cf-banner img { filter: hue-rotate(228deg) saturate(0.35) brightness(0.8); }
+.cardface[data-rarity="Curse"] .cf-inner,
+.cardface[data-rarity="Curse"] .cf-type img,
+.cardface[data-rarity="Curse"] .cf-banner img { filter: hue-rotate(97deg) saturate(1.1) brightness(0.9); }
+.cardface[data-rarity="Quest"] .cf-inner,
+.cardface[data-rarity="Quest"] .cf-type img,
+.cardface[data-rarity="Quest"] .cf-banner img { filter: hue-rotate(185deg) saturate(1.727) brightness(0.9); }
+
+/*
+ * 先古卡的**绸带**不套稀有度材质。
+ *
+ * NCard.Reload 里先古分支是 `_banner.Material = null`（普通分支才是 `= Model.BannerMaterial`），
+ * 而 _ancientBanner 这个节点根本没有材质。所以古代绸带那张贴图是**原样**画出来的——
+ * 它自带紫绿渐变，直接显示就是对的，加任何滤镜反而会错。
+ *
+ * 注意这只适用于绸带：类型牌底片走的是另一条路（见下），它**仍然**按稀有度上色。
+ */
+.cardface[data-rarity="Ancient"] .cf-banner img { filter: none; }
+
+/*
+ * 先古卡的**类型牌底片**与基础卡完全一致。
+ *
+ * 游戏里 UpdateTypePlaque() 是无条件调用的，先古分支隐藏的只有
+ * _portraitBorder / _portrait / _frame / _banner —— 不含 _typePlaque。
+ * 所以先古卡也有类型牌底片，用和普通卡同一张贴图（card_portrait_border_plaque2）。
+ *
+ * 上色按需求与基础卡取同一个值（灰、略暗），这样两种卡的类型牌看起来一样。
+ *
+ * 只命中 .cf-type img：先古卡没有 .cf-inner；.cf-banner img 由上面那条规则
+ * 单独处理（先古绸带用 ancient_banner 且不加滤镜）。
+ */
+.cardface[data-rarity="Ancient"] .cf-type img {
+  filter: hue-rotate(0deg) saturate(0) brightness(0.85);
+}
+
+/* ---- 外框（游戏的 Frame：整张卡片大小）---- */
+.cardface img.cf-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/*
+ * 外框按牌池着色，用的是同一套滤镜机制（参数取自 materials/cards/frames/）。
+ * 注意这与「内框/绸带按稀有度」是两套独立的东西：外框看牌池，内框与绸带看稀有度。
+ */
+.cardface:not(.is-ancient)[data-pool="ironclad"] img.cf-frame { filter: hue-rotate(9deg) saturate(0.85) brightness(1.0); }
+.cardface:not(.is-ancient)[data-pool="silent"] img.cf-frame { filter: hue-rotate(115deg) saturate(0.45) brightness(1.2); }
+.cardface:not(.is-ancient)[data-pool="defect"] img.cf-frame { filter: hue-rotate(198deg) saturate(0.9) brightness(1.0); }
+.cardface:not(.is-ancient)[data-pool="regent"] img.cf-frame { filter: hue-rotate(43deg) saturate(1.5) brightness(1.2); }
+.cardface:not(.is-ancient)[data-pool="necrobinder"] img.cf-frame { filter: hue-rotate(347deg) saturate(0.55) brightness(1.2); }
+.cardface:not(.is-ancient)[data-pool="curse"] img.cf-frame { filter: hue-rotate(306deg) saturate(0.05) brightness(0.55); }
+.cardface:not(.is-ancient)[data-pool="quest"] img.cf-frame { filter: hue-rotate(0deg) saturate(1.0) brightness(1.0); }
+
+/* 无色 / 事件 / 状态 / 衍生 都走游戏里"无色"那一套材质。 */
+.cardface:not(.is-ancient)[data-pool="colorless"] img.cf-frame,
+.cardface:not(.is-ancient)[data-pool="event"] img.cf-frame,
+.cardface:not(.is-ancient)[data-pool="status"] img.cf-frame,
+.cardface:not(.is-ancient)[data-pool="token"] img.cf-frame { filter: hue-rotate(0deg) saturate(0) brightness(1.2); }
+
+
+
+/*
+ * 外框按牌池着色。
+ *
+ * 游戏是一张共享的边框贴图 + 按牌池套 HSV 位移材质。这里用 CSS filter 近似——
+ * **是近似，不是精确复现**：CSS 没有等价的 HSV 位移，只能靠色相旋转与饱和度调整逼近。
+ * 底色贴图本身是红色的（铁甲战士），所以各池的旋转角度以红色为基准。
+ */
+.cardface .cf-banner {
+  position: absolute;
+  left: -4.33%;
+  top: 0.95%;
+  width: 109%;
+  height: 19.67%;
+  z-index: 7;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cardface .cf-banner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 游戏用的是 aspect-cover。 */
+  object-fit: cover;
+}
+
+/*
+ * 卡牌名字（游戏的 TitleLabel，字形 26）。
+ *
+ * 位置：游戏把标签放在卡面纵向 1.66%..14.46%，但那个框的中线并不是绸带上那条色带的
+ * 中线——绸带贴图里"宽色带"只占图片上部（实测第 10..71 行 / 共 145 行），映射进卡面
+ * 是 2.31%..10.58%，中线 6.44%。文字若按标签框居中（8.06%），视觉上就**比色带低了
+ * 约 6.6px**，正是"名字比条带低了一点"。
+ *
+ * 所以这里把框整体上移：top + height/2 = 6.44%，让文字的墨迹中心落在色带中线上。
+ *
+ * 字重：游戏的 TitleLabel 用的是 kreon_regular + spacing_glyph=1（不是粗体），
+ * 醒目的是那圈很粗的深色描边。这里不假装粗体，改用近似的描边宽度。
+ */
+.cardface .cf-name {
+  position: absolute;
+  left: 15%;
+  top: 0.04%;
+  width: 70%;
+  height: 12.8%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8;
+  /*
+   * 字号 26，但**随卡面宽度缩放**：--u 是 1 个游戏像素（卡宽 300 时的像素）。
+   * 注意预览的实际宽度通常略小于 300（min(299, …)），所以这里乘 --u 而不是写死 px。
+   */
+  font-size: calc(26 * var(--u));
+  line-height: 1;
+  font-weight: 400;
+  text-align: center;
+  color: #fff6e2;
+  /* 描边颜色随稀有度（游戏的 GetTitleLabelOutlineColor），默认是普通档的深灰。 */
+  -webkit-text-stroke: calc(3 * var(--u)) #4d4b40;
+  paint-order: stroke fill;
+  text-shadow:
+    calc(2 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) rgba(0, 0, 0, 0.19);
+}
+
+/* 名字描边：StsColors.cardTitleOutline*。 */
+.cardface[data-rarity="Uncommon"] .cf-name { -webkit-text-stroke-color: #005c75; }
+.cardface[data-rarity="Rare"] .cf-name { -webkit-text-stroke-color: #6b4b00; }
+.cardface[data-rarity="Curse"] .cf-name { -webkit-text-stroke-color: #550b9e; }
+.cardface[data-rarity="Quest"] .cf-name { -webkit-text-stroke-color: #7e3e15; }
+.cardface[data-rarity="Status"] .cf-name { -webkit-text-stroke-color: #4f522f; }
+.cardface[data-rarity="Event"] .cf-name { -webkit-text-stroke-color: #1b6131; }
+
+/*
+ * 类型（游戏的 TypePlaque + TypeLabel：50.24%..59.01%，居中）。
+ *
+ * 底片是单独一张图（card_portrait_border_plaque2），而它的材质和绸带、内框是同一个
+ * （源码里 `_typePlaque.Material = Model.BannerMaterial`），所以颜色同样随稀有度变——
+ * 之前一直是蓝绿原色，就是因为没给它上稀有度滤镜。
+ */
+.cardface .cf-type {
+  position: absolute;
+  left: 39.83%;
+  top: 50.24%;
+  width: 20.33%;
+  height: 8.77%;
+  display: grid;
+  place-items: center;
+  z-index: 9;
+  font-size: calc(16 * var(--u));
+  line-height: 1;
+  font-weight: 700;
+  text-align: center;
+  /* 游戏里类型文字是深色压在浅色底片上。 */
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.cardface .cf-type img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* 九宫格底片：拉长时不能让左右两端变形。 */
+  object-fit: fill;
+}
+
+.cardface .cf-type span {
+  position: relative;
+  z-index: 1;
+}
+
+/*
+ * ---- 描述（游戏的 DescriptionLabel：58.77%..91%，字形 21）----
+ *
+ * 这里是**一个**文字流：描述前关键词、描述、描述后关键词全在一段富文本里，和游戏一样
+ * （CardModel.GetDescriptionForPile 把三段 join 成一个 RichTextLabel 的 text）。
+ *
+ * 结构上分两层，原因见 .cf-text 的注释：
+ *   .cf-body  定高、居中、裁切 —— 相当于那个 RichTextLabel 的矩形
+ *   .cf-text  真正承载文字的块，inline 流不受影响
+ */
+.cardface .cf-body {
+  position: absolute;
+  left: 9.33%;
+  top: 58.77%;
+  width: 81%;
+  height: 32.23%;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  /* 游戏里 DescriptionLabel 的 vertical_alignment 是居中，这里照做。 */
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  /*
+   * 字号 21，实际字号由 fitCardFaces() 在 12..21 之间按"装得下"自动定，
+   * 与游戏的 MegaRichTextLabel.AdjustFontSize 同一套二分法（MinFontSize 12 / MaxFontSize 21）。
+   */
+  font-size: calc(21 * var(--u));
+  /*
+   * 行距照游戏的算法：theme 里 line_separation = -3，是在字体**自然行高**上减 3px，
+   * 不是在字号上减。Kreon 的 asc+desc = 1.2597em，所以行高 = 1.2597em − 3px。
+   *
+   * 之前写成"字号 − 3"，得到 18px 行高配 21px 字，行与行直接叠住。这里再加一个
+   * 1.06em 的下限：字号被自适应缩到很小时减 3px 会相对地过大。
+   */
+  line-height: max(1.06em, calc(1.2597em - 3 * var(--u)));
+  white-space: pre-wrap;
+  color: rgba(255, 246, 226, 1);
+  text-shadow: calc(2 * var(--u)) calc(2 * var(--u)) calc(2 * var(--u)) rgba(0, 0, 0, 0.25);
+}
+
+/*
+ * 文字流本体。
+ *
+ * 为什么必须有这一层：.cf-body 是 flex 容器（为了垂直居中），而 flex 会把**元素子节点**
+ * 变成 flex item、各自占一行。关键词是以 <span> 形式混在描述里的，于是"获得 3 点
+ * [格挡]"会被拆成"获得 3 点"和"格挡"两行。把整段文字包进一个普通块，flex 只看到一个
+ * 子节点，里面的 span 就回到正常的 inline 流。
+ *
+ * flex: 0 0 auto 保证它不会被 flex 压扁——否则溢出时它会被压缩，fitCardFaces() 就
+ * 量不出真实需要的高度。
+ */
+.cardface .cf-text {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+/*
+ * 连缩到最小字号（12）都装不下时，JS 会给它加这个类：改成顶对齐。
+ *
+ * 居中时溢出是上下各切一半，连第一行都读不完整；顶对齐至少留得住前半段。
+ * 正常情况下走不到这里——fitCardFaces() 会在 12..21 之间找到一个装得下的字号。
+ */
+.cardface .cf-body.is-overflow {
+  justify-content: flex-start;
+}
+
+/*
+ * 正文里游戏标记（[gold]…[/gold] 等）对应的颜色，取自游戏卡面的配色：
+ * 金色关键字、蓝色说明、紫色特殊名词。由 cardBodyHtml() 生成这些 span。
+ */
+.cardface .cf-body .cf-gold,
+.cardface .cf-body .cf-keyword { color: #f0c25f; }
+.cardface .cf-body .cf-blue { color: #7fb2e5; }
+.cardface .cf-body .cf-purple { color: #c69ae8; }
+
+/* 关键词就是正文流里的一小段金色文字，不单独成盒。 */
+.cardface .cf-keyword { white-space: nowrap; }
+
+/* ---- 能量珠（游戏的 EnergyIcon：-5.33%..16%，字形 32）---- */
+.cardface .cf-cost {
+  position: absolute;
+  left: -5.33%;
+  top: -3.79%;
+  width: 21.33%;
+  height: 15.17%;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  font-size: calc(32 * var(--u));
+  line-height: 1;
+  font-weight: 700;
+  color: #fff6e2;
+  /*
+   * 数字描边：游戏 NCard.UpdateEnergyCostColor 取 `Model.Pool.EnergyOutlineColor`，
+   * 是按**牌池**定的（铁甲战士深红、静默猎手深绿…），不是固定色。
+   * 具体值由 cardFace() 以 --cost-outline 内联写到卡面上。
+   */
+  -webkit-text-stroke: calc(3 * var(--u)) var(--cost-outline, #5c5440);
+  paint-order: stroke fill;
+}
+
+.cardface .cf-energy {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* 数字压在珠子上层。 */
+.cardface .cf-cost-num {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--text-faint); }
+
+/* ---------- 先古（Ancient）卡：另一套外观 -----------------------------------------
+
+   游戏里 NCard.Reload 对先古卡做这些事（flag = Rarity == Ancient）：
+
+     _portraitBorder / _portrait / _frame / _banner   隐藏
+     _ancientPortrait / _ancientBorderGlassOverlay /
+     _ancientBorder / _ancientTextBg / _ancientBanner 显示
+
+   也就是说先古卡**不用普通外框**（`card_frame_attack_s` 那套），而是：
+
+     - 立绘铺满整张卡（AncientPortrait + 一张遮罩材质）
+     - ancient_card_border 作外框（stretch_mode 是 KeepAspectCentered，即 contain）
+     - ancient_text_bg_<类型> 在描述后面垫一块深色面板
+     - ancient_banner 作绸带（带冠饰的暗色缎带，不是普通那张）
+
+   注意 `images/.../card_frame_ancient_s.tres` 在游戏里**没有任何地方引用**（在整份 PCK
+   里搜过，只出现在 atlas 的清单里），先古卡从来不用它。早先把它当外框用，于是先古卡
+   整张被一层灰色方块盖住——这就是"先古卡的圆形样式错误"看起来的根源。
+*/
+.cardface.is-ancient .cf-art {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 4%;
+}
+
+/*
+ * 先古绸带的色带位置和普通绸带不同，名字跟着上移。
+ *
+ * 两张图都是 stretch_mode = 6（cover），但长宽比不一样：普通绸带 653×145 恰好填满
+ * 那个框，而古代绸带 671×182 更高，按 cover 放大后上下各裁掉约 2.8px。实测：
+ * 普通绸带的色带中线落在卡面 6.44%，古代绸带的落在 8.19%。差 7.4px 左右，不区分的话
+ * 先古卡名会浮在色带上沿之上。
+ *
+ * 古代绸带的色带实测在图片第 38..99 行（共 182 行），照 cover 映射后中线 = 8.19%。
+ */
+.cardface.is-ancient .cf-name {
+  top: 1.79%;
+}
+
+/*
+ * 先古外框（AncientBorder：卡面 -1.33%..100.67% × -2.84%..101.4%，比卡略大一圈）。
+ * 画在立绘之上、文字底衬之下——游戏里就是这个次序。
+ */
+.cardface .cf-ancient-border {
+  position: absolute;
+  left: -1.33%;
+  top: -2.84%;
+  width: 102%;
+  height: 104.24%;
+  z-index: 2;
+  /* 游戏是 KeepAspectCentered。 */
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/*
+ * 先古卡的描述底衬（AncientTextBg：5.67%..93.67% × 44.79%..92.89%）。
+ *
+ * 这是先古卡上那块深色半透明面板，让压在立绘上的描述文字读得清。普通卡没有这一层，
+ * 所以只在先古卡上出现。三张图（攻击/技能/能力）尺寸不同，游戏按 contain 缩放居中。
+ */
+.cardface .cf-ancient-textbg {
+  position: absolute;
+  left: 5.67%;
+  top: 44.79%;
+  width: 88%;
+  height: 48.1%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.cardface .cf-ancient-textbg img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/*
+ * 先古卡的文字底衬既有 dark 面板，描述文字要更亮一点才够对比。
+ * （游戏里底衬的 modulate 是 Color(0,0,0,0.66)，即把贴图压暗成半透明黑。）
+ */
+.cardface.is-ancient .cf-body {
+  color: #fffaf0;
+}

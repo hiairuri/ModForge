@@ -1,0 +1,39 @@
+<Solution>
+  <Folder Name="/spikes/">
+    <Project Path="spikes/ArtProbe/ArtProbe.csproj" />
+    <Project Path="spikes/P0Minimal/P0Minimal.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ModForge.App/ModForge.App.csproj" />
+    <Project Path="src/ModForge.Core/ModForge.Core.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/arttest/arttest.csproj" />
+    <Project Path="tools/cardtest/cardtest.csproj" />
+    <Project Path="tools/ctextest/ctextest.csproj" />
+    <Project Path="tools/counttest/counttest.csproj" />
+    <Project Path="tools/effecttest/effecttest.csproj" />
+    <Project Path="tools/filetest/filetest.csproj" />
+    <Project Path="tools/forge/forge.csproj" />
+    <Project Path="tools/gensnapshot/gensnapshot.csproj" />
+    <Project Path="tools/kindtest/kindtest.csproj" />
+    <Project Path="tools/modprobe/modprobe.csproj" />
+    <Project Path="tools/newfx/newfx.csproj" />
+    <Project Path="tools/newfx2/newfx2.csproj" />
+    <Project Path="tools/pckgen/pckgen.csproj" />
+    <Project Path="tools/phrasetest/phrasetest.csproj" />
+    <Project Path="tools/picktest/picktest.csproj" />
+    <Project Path="tools/projecttest/projecttest.csproj" />
+    <Project Path="tools/sharedgen/sharedgen.csproj" />
+    <Project Path="tools/skinexport/skinexport.csproj" />
+    <Project Path="tools/skintest/skintest.csproj" />
+    <Project Path="tools/spinetest/spinetest.csproj" />
+    <Project Path="tools/srctest/srctest.csproj" />
+    <Project Path="tools/statstest/statstest.csproj" />
+    <Project Path="tools/timingtest/timingtest.csproj" />
+    <Project Path="tools/tripletest/tripletest.csproj" />
+    <Project Path="tools/vartest/vartest.csproj" />
+    <Project Path="tools/verify/verify.csproj" />
+    <Project Path="tools/workspace/workspace.csproj" />
+  </Folder>
+</Solution>

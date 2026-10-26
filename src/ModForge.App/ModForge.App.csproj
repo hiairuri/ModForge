@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      net9.0-windows 而不是 net9.0：编辑器要用系统原生的文件选择对话框（浏览器给不了
+      真实路径），那需要 Windows 桌面 API。
+
+      编辑器本来就只跑在 Windows 上（它读的是 Windows 版游戏的 sts2.dll 与 PCK），
+      所以收窄目标框架不损失任何东西。
+
+      注意没有开 UseWindowsForms：对话框直接调 Shell 的 COM 接口（见 FolderPicker），
+      不经 WinForms。WinForms 的对话框需要宿主窗口，而给控制台程序造一个隐形宿主窗口会
+      导致对话框反复闪烁。
+    -->
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ModForge.App</RootNamespace>
+    <AssemblyName>ModForge</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ModForge.Core\ModForge.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,12 @@
+{
+  "id": "P0Minimal",
+  "name": "ModForge P0 Spike",
+  "author": "ModForge",
+  "description": "P0 validation: one card in the Ironclad pool plus one real PowerModel buff.",
+  "version": "1.0.0",
+  "has_pck": true,
+  "has_dll": true,
+  "dependencies": [],
+  "affects_gameplay": true,
+  "min_game_version": "0.107.1"
+}
